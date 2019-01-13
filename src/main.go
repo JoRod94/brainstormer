@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-  http.Handle("/", http.FileServer(http.Dir("../public")))
+  http.Handle("/", http.FileServer(http.Dir("./client/build")))
   server := chat.NewServer()
   go server.Run()
 
