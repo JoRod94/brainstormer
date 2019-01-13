@@ -1,8 +1,9 @@
-package chat
+package main
 
 import (
   "log"
   "net/http"
+
   "github.com/gorilla/websocket"
 )
 
@@ -46,6 +47,7 @@ func (server *Server) handleConnections(w http.ResponseWriter, r *http.Request){
     msgErr := ws.ReadJSON(&msg)
     if msgErr != nil {
       delete(server.clients, ws)
+      break
     }
     server.listener <- msg
   }
