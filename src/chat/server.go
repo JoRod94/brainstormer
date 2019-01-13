@@ -9,19 +9,19 @@ import (
 var upgrader = websocket.Upgrader{}
 
 type Server struct {
-  messages []*Message `json:"messages"`
-  clients map[int]*Member
-  listener chan *Message
+  Messages []*Message `json:"messages"`
+  clients map[*websocket.Conn]bool
+  listener chan Message
 } 
 
-func NewServer() {
+func NewServer() *Server {
   Messages := []*Message{}
-  clients := make(map[int]*Member)
-  listener := make(chan *Message)
+  clients := make(map[*websocket.Conn]bool)
+  listener := make(chan Message)
   return &Server{
-    messages,
+    Messages,
     clients,
-    listener
+    listener,
   } 
 }
 
@@ -55,7 +55,7 @@ func (server *Server) Run() {
   http.HandleFunc("/ws", server.handleConnections)
   for {
     msg := <- server.listener
-    server.Messages = append(server.Messages, msg)
+    server.Messages = append(server.Messages, &msg)
     for cws := range server.clients {
       err := cws.WriteJSON(msg)
       if err != nil {
