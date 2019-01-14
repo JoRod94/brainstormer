@@ -1,4 +1,4 @@
-package main
+package chat
 
 type Message struct {
   Username string `json:"username"`

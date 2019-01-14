@@ -2,10 +2,19 @@ import React, { Component } from 'react';
 import './App.css';
 import styled from "styled-components";
 import Message from "./components/Message";
+import IdeaPanel from './components/IdeaPanel';
 
 const ChatBox = styled("div")`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  height: 85vh;
+`;
+
+const ChatBoxWrapper = styled("div")`
+  border-right: 2px solid black;
   width: 100%;
-  overflow: scroll;
 `;
 
 const InputFooter = styled("div")`
@@ -14,8 +23,8 @@ const InputFooter = styled("div")`
   left: 0;
   bottom: 0;
   width: 100%;
-  border-top: 1px solid black;
-  height: 60px;
+  border-top: 2px solid black;
+  height: 10vh;
   color: white;
   text-align: center;
   display: flex;
@@ -38,9 +47,8 @@ const UsernameInput = styled("input")`
 const ChatInput = styled("input")`
   border: none;
   padding: 5px;
-  border: 1px solid black;
-  border-radius: 3px;
-  width: 700px;
+  border: 2px solid black;
+  width: 60vw;
 `;
 
 const SubmitButton = styled("input")`
@@ -48,8 +56,15 @@ const SubmitButton = styled("input")`
   padding: 5px;
   border: 1px solid black;
   background: black;
-  border-radius: 3px;
   color: white;
+  font-weight: 500;
+  margin-left: 10px;
+`;
+
+const ContentBox = styled("div")`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
 `;
 
 const Wrapper = styled("div")`
@@ -58,8 +73,16 @@ const Wrapper = styled("div")`
 `;
 
 const Puller = styled("div")`
-  margin-top: 60px;
-  height: 60px;
+  height: 1px;
+  margin-top: 10vh;
+`;
+
+const Header = styled("div")`
+  border-bottom: 2px solid black;
+  height: 5vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 class App extends Component {
@@ -74,6 +97,8 @@ class App extends Component {
 
     this.state = {
       messages: [],
+      ideas: [],
+      currentIdea: -1,
       chatSocket,
     }
   }
@@ -84,11 +109,16 @@ class App extends Component {
 
   onChatSocketMessage(event){
     const parsedData = JSON.parse(event.data);
-    if(parsedData.messages){
-      this.setState({messages: parsedData.messages});  
+    console.log(parsedData);
+    if(parsedData.messages || parsedData.ideas){
+      this.setState(prevState => ({
+        messages: parsedData.messages || prevState.messages,
+        ideas: parsedData.ideas,
+        currentIdea: parsedData.currentIdea,
+      }));
     }
     else{
-      this.setState({messages: [...this.state.messages, parsedData]});
+      this.setState(prevState => ({messages: [...prevState.messages, parsedData]}));
     }
   }
 
@@ -99,7 +129,9 @@ class App extends Component {
       timestamp: "today",
       text: event.target[0].value,
     }
-    this.state.chatSocket.send(JSON.stringify(newMessage));
+    if(event.target[0].value.length != ""){
+      this.state.chatSocket.send(JSON.stringify(newMessage));
+    }
     event.target[0].value = "";
     this.refs["bottom"].scrollIntoView({behavior: "smooth"});
   }
@@ -110,7 +142,7 @@ class App extends Component {
   }
 
   render() {
-    const { messages, username } = this.state;
+    const { messages, username, ideas, currentIdea } = this.state;
 
     if(!username){
       return (
@@ -125,17 +157,25 @@ class App extends Component {
     }
 
     return (
-      <Wrapper>
-        <ChatBox className="App">
-          {messages.map(function(m){
-            return <Message {...m}/>
-          })}
-        </ChatBox>
-        <Puller ref="bottom"/>
+      <Wrapper className="App">
+        <Header>
+          <h2> B R A I N S T O R M E R </h2>
+        </Header>
+        <ContentBox>
+          <ChatBoxWrapper>
+            <ChatBox >
+              {messages.map(function(m){
+                return <Message {...m}/>
+              })}
+              <Puller ref="bottom"/>
+            </ChatBox>
+          </ChatBoxWrapper>
+          {ideas.length > 0 && <IdeaPanel ideas={ideas} currentIdea={currentIdea}/>}
+        </ContentBox>
         <InputFooter>
           <form onSubmit={this.onMessageSubmit}>
             <ChatInput type="text" name="message"/>
-            <SubmitButton type="submit" value="Submit"/>
+            <SubmitButton type="submit" value="SUBMIT"/>
           </form>
         </InputFooter>
       </Wrapper>
