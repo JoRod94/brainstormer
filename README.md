@@ -1,6 +1,6 @@
 # Brainstormer
 
-A chat made in *golang* with additional functionality. 
+A chat made in *golang* with additional functionality. Client made in React.
 
 Use text commands to brainstorm ideas, adding pros and cons, and voting for and against ideas.
 
