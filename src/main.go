@@ -7,7 +7,10 @@ import (
 )
 
 func main() {
+  // Redirect file requests to React build folder
   http.Handle("/", http.FileServer(http.Dir("./client/build")))
+
+  // Instantiate and run server
   server := chat.NewServer()
   go server.Run()
 
