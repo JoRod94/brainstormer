@@ -2,10 +2,10 @@ import React, { Component } from 'react';
 import styled from "styled-components";
 
 const Idea = styled("div")`
-    border: 1px solid black;
-    border-radius: 3px;
+    border: 2px solid black;
     margin-bottom: 10vh;
     margin-top: 10px;
+    box-shadow: 10px 10px 0px -4px rgba(0,0,0,1);
 `;
 
 const Header = styled("h3")`
@@ -21,21 +21,19 @@ const PropertyColumn = styled("div")`
     flex-direction: column;
     padding: 0 10px;
     padding-bottom: 20px;
-    border: 1px solid black;
-    border-radius: 3px;
+    border: 2px solid black;
     width: 180px;
 `;
 
 const Property = styled("span")`
     padding: 10px;
-    border: 1px solid black;
-    border-radius: 3px;
+    border: 2px solid black;
     margin: 3px 0;
 `;
 
 const Footer = styled("div")`
     margin-top: 20px;
-    border-top: 1px solid black;
+    border-top: 2px solid black;
     padding: 20px;
 `;
 

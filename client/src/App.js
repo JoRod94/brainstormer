@@ -40,8 +40,8 @@ const InputForm = styled("form")`
 const UsernameInput = styled("input")`
   border: none;
   padding: 5px;
-  border: 1px solid black;
-  border-radius: 3px;
+  border: 2px solid black;
+  box-shadow: 5px 5px 0px 0px rgba(0,0,0,1);
 `;
 
 const ChatInput = styled("input")`
@@ -49,16 +49,18 @@ const ChatInput = styled("input")`
   padding: 5px;
   border: 2px solid black;
   width: 60vw;
+  box-shadow: 5px 5px 0px 0px rgba(0,0,0,1);
 `;
 
 const SubmitButton = styled("input")`
   border: none;
   padding: 5px;
-  border: 1px solid black;
-  background: black;
-  color: white;
+  border: 2px solid black;
+  background: white;
+  color: black;
   font-weight: 500;
   margin-left: 10px;
+  box-shadow: 5px 5px 0px 0px rgba(0,0,0,1);
 `;
 
 const ContentBox = styled("div")`
@@ -83,6 +85,14 @@ const Header = styled("div")`
   display: flex;
   justify-content: center;
   align-items: center;
+`;
+
+const Greeting = styled("div")`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 `;
 
 class App extends Component {
@@ -146,13 +156,16 @@ class App extends Component {
 
     if(!username){
       return (
-        <div className="App">
+        <Greeting className="App">
+          <Header>
+            <h1> B R A I N S T O R M E R </h1>
+          </Header>
           <InputForm onSubmit={this.onUsernameSubmit}>
-            What is your username?<br/>
+            <h1>Pick a username</h1><br/>
             <UsernameInput type="text" name="username"/>
             <SubmitButton type="submit" value="Submit"/>
           </InputForm>
-        </div>  
+        </Greeting>  
       )
     }
 

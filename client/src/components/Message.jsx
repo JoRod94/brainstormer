@@ -9,6 +9,6 @@ const Message = styled("div")`
 
 export default ({username, text, timestamp}) => (
   <Message>
-    <p>{username}: {text} </p>
+    <p><strong>{username}:</strong> {text} </p>
   </Message>
 )
