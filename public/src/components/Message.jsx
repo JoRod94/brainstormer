@@ -7,7 +7,7 @@ const Message = styled("div")`
   border-bottom: 1px solid black;
 `;
 
-export default ({username, text, timestamp}) => (
+export default ({username, text}) => (
   <Message>
     <p><strong>{username}:</strong> {text} </p>
   </Message>

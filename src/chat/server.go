@@ -92,55 +92,60 @@ func (server *Server) handleConnections(w http.ResponseWriter, r *http.Request){
 }
 
 // Parses received server messages to determine possible commands
-func (server *Server) readCommands(msg Message){
+func (server *Server) readCommand(msg Message){
   fields := strings.Fields(msg.Text)
   if(len(fields) > 1){
-    server.handleCommand(Command{fields[0], strings.Join(fields[1:], " ")})
+    server.handleCommand(Command{fields[0], strings.Join(fields[1:], " ")}, msg.Username)
   }
 }
 
 // Detects commands in messages, executing them if present
-func (server *Server) handleCommand(command Command) {
+func (server *Server) handleCommand(command Command, username string) {
+  noIdeas := server.CurrentIdea < 0
   switch(command.key){
-    // Switch to another idea
-    case "/idea":
-      server.ideasLock.Lock();
-      ideaNumber, err := strconv.Atoi(command.arg)
-      if(err == nil || ideaNumber >= 0 || ideaNumber < len(server.Ideas)){
-        server.CurrentIdea = ideaNumber
-      }
-      server.ideasLock.Unlock();
     // Create new idea
     case "/newidea":
-      server.ideasLock.Lock();
+      server.ideasLock.Lock()
       server.CurrentIdea++
       newIdea := Idea{
         command.arg, 
         []string{}, 
         []string{}, 
-        0,
+        make(map[string]bool),
       }
       server.Ideas = append(server.Ideas, &newIdea)
-      server.ideasLock.Unlock();
+      server.ideasLock.Unlock()
+    // Switch to another idea
+    case "/idea":
+      if(noIdeas){ break }
+      server.ideasLock.Lock()
+      ideaNumber, err := strconv.Atoi(command.arg)
+      if(err == nil || ideaNumber >= 0 || ideaNumber < len(server.Ideas)){
+        server.CurrentIdea = ideaNumber
+      }
+      server.ideasLock.Unlock()
     // Add idea pros
     case "/why":
-      server.ideasLock.Lock();
+      if(noIdeas){ break }
+      server.ideasLock.Lock()
       server.Ideas[server.CurrentIdea].Why = append(server.Ideas[server.CurrentIdea].Why, command.arg)
-      server.ideasLock.Unlock();
+      server.ideasLock.Unlock()
     // Add idea cons
     case "/whynot":
-      server.ideasLock.Lock();
+      if(noIdeas){ break }
+      server.ideasLock.Lock()
       server.Ideas[server.CurrentIdea].WhyNot = append(server.Ideas[server.CurrentIdea].WhyNot, command.arg)
-      server.ideasLock.Unlock();
+      server.ideasLock.Unlock()
     // Add vote. Only "yes" is considered a positive vote
     case "/vote":
-      server.ideasLock.Lock();
+      if(noIdeas){ break }
+      server.ideasLock.Lock()
       if(command.arg == "yes"){
-        server.Ideas[server.CurrentIdea].Votes++
-      } else {
-        server.Ideas[server.CurrentIdea].Votes--
+        server.Ideas[server.CurrentIdea].Votes[username] = true
+      } else if(command.arg == "no") {
+        server.Ideas[server.CurrentIdea].Votes[username] = false
       }
-      server.ideasLock.Unlock();
+      server.ideasLock.Unlock()
   }
 
   // After changing the idea list, send new state to the client
@@ -155,16 +160,12 @@ func (server *Server) handleCommand(command Command) {
   }
 }
 
-// Main server exectution loop
-func (server *Server) Run() {
-  // Sets WebSocket handler for new connections
-  http.HandleFunc("/ws", server.handleConnections)
-
+func (server *Server) handleMessages() {
   // Receives channel messages from connection goroutines, processing them
   for {
     msg := <- server.msgListener
     server.Messages = append(server.Messages, &msg)
-    server.readCommands(msg)
+    server.readCommand(msg)
     // After processing a new message, send it to all clients to update their state
     for cws := range server.clients {
       err := cws.WriteJSON(msg)
@@ -176,4 +177,13 @@ func (server *Server) Run() {
       }
     }
   }
+}
+
+// Main server exectution loop
+func (server *Server) Run() {
+  // Sets WebSocket handler for new connections
+  http.HandleFunc("/ws", server.handleConnections)
+
+  // Starts listening for messages
+  server.handleMessages()
 }

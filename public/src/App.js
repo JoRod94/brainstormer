@@ -33,10 +33,6 @@ const InputFooter = styled("div")`
   background-color: white;
 `;
 
-const InputForm = styled("form")`
-  height: 100%;
-`;
-
 const UsernameInput = styled("input")`
   border: none;
   padding: 5px;
@@ -136,7 +132,6 @@ class App extends Component {
     event.preventDefault();
     const newMessage = {
       username: this.state.username,
-      timestamp: "today",
       text: event.target[0].value,
     }
     if(event.target[0].value.length != ""){
@@ -160,11 +155,11 @@ class App extends Component {
           <Header>
             <h1> B R A I N S T O R M E R </h1>
           </Header>
-          <InputForm onSubmit={this.onUsernameSubmit}>
+          <form onSubmit={this.onUsernameSubmit}>
             <h1>Pick a username</h1><br/>
             <UsernameInput type="text" name="username"/>
             <SubmitButton type="submit" value="Submit"/>
-          </InputForm>
+          </form>
         </Greeting>  
       )
     }
@@ -187,7 +182,7 @@ class App extends Component {
         </ContentBox>
         <InputFooter>
           <form onSubmit={this.onMessageSubmit}>
-            <ChatInput type="text" name="message"/>
+            <ChatInput type="text" name="message" placeholder="Commands: /newidea  /idea  /why  /whynot  /vote"/>
             <SubmitButton type="submit" value="SUBMIT"/>
           </form>
         </InputFooter>

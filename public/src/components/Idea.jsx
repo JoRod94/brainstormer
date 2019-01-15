@@ -53,7 +53,7 @@ export default ({what, why, whynot, votes}) => (
         </PropertyColumn>
     </Board>
     <Footer>
-        Votes: {votes}
+        Votes: {Object.keys(votes).filter(v => votes[v]).length}
     </Footer>
   </Idea>
 )
