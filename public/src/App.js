@@ -115,7 +115,6 @@ class App extends Component {
 
   onChatSocketMessage(event){
     const parsedData = JSON.parse(event.data);
-    console.log(parsedData);
     if(parsedData.messages || parsedData.ideas){
       this.setState(prevState => ({
         messages: parsedData.messages || prevState.messages,

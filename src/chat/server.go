@@ -14,7 +14,6 @@ var upgrader = websocket.Upgrader{}
 
 // JSON tagged fields will be marshalled and sent to the client. Uppercase required
 type Server struct {
-  Shutdown chan bool
   Messages []*Message `json:"messages"`
   ideasLock *sync.Mutex
   Ideas []*Idea `json:"ideas"`
@@ -23,6 +22,7 @@ type Server struct {
   clients map[*websocket.Conn]bool
   msgListener chan Message
   cmdListener chan Command
+  shutdown chan bool
 }
 
 // Struct used to send updates on idea list
@@ -37,18 +37,16 @@ type Command struct {
 }
 
 func NewServer() *Server {
-  Shutdown := make(chan bool)
   Messages := []*Message{}
   ideasLock := &sync.Mutex{}
   Ideas := []*Idea{}
-  // Initiated as -1 so that the first idea is correctly indexed at 0
   CurrentIdea := -1
   clientsLock := &sync.Mutex{}
   clients := make(map[*websocket.Conn]bool)
   msgListener := make(chan Message)
   cmdListener := make(chan Command)
+  shutdown := make(chan bool)
   return &Server{
-    Shutdown,
     Messages,
     ideasLock,
     Ideas,
@@ -57,6 +55,7 @@ func NewServer() *Server {
     clients,
     msgListener,
     cmdListener,
+    shutdown,
   } 
 }
 
@@ -119,7 +118,7 @@ func (server *Server) handleCommand(command Command, username string) {
     // Create new idea
     case "/newidea":
       server.ideasLock.Lock()
-      server.CurrentIdea++
+      server.CurrentIdea = len(server.Ideas)
       newIdea := Idea{
         command.arg, 
         []string{}, 
@@ -195,7 +194,8 @@ func (server *Server) handleMessages() {
             server.clientsLock.Unlock()
           }
         }
-      case <-server.Shutdown:
+      // Shutdown server when receiving a close on the shutdown signal channel
+      case <-server.shutdown:
         return
     }
   }

@@ -8,6 +8,8 @@ To run, use `go run main.go`.
 
 If you edit the client, remember to create a new build with `npm run build` in `./client`. The go server serves build files.
 
+Tests available in `src/chat/chat_test.go`. Use `go test` to run them.
+
 PS: It's ugly.
 
 ## Commands

@@ -15,7 +15,7 @@ func TestMain(m *testing.M) {
 
     result := m.Run() 
 
-    close(testServer.Shutdown)
+    close(testServer.shutdown)
     os.Exit(result)
 }
 
