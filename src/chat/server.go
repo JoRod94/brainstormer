@@ -14,6 +14,7 @@ var upgrader = websocket.Upgrader{}
 
 // JSON tagged fields will be marshalled and sent to the client. Uppercase required
 type Server struct {
+  Shutdown chan bool
   Messages []*Message `json:"messages"`
   ideasLock *sync.Mutex
   Ideas []*Idea `json:"ideas"`
@@ -36,6 +37,7 @@ type Command struct {
 }
 
 func NewServer() *Server {
+  Shutdown := make(chan bool)
   Messages := []*Message{}
   ideasLock := &sync.Mutex{}
   Ideas := []*Idea{}
@@ -46,6 +48,7 @@ func NewServer() *Server {
   msgListener := make(chan Message)
   cmdListener := make(chan Command)
   return &Server{
+    Shutdown,
     Messages,
     ideasLock,
     Ideas,
@@ -55,6 +58,12 @@ func NewServer() *Server {
     msgListener,
     cmdListener,
   } 
+}
+
+func (server *Server) ClearData() {
+  server.Messages = []*Message{}
+  server.Ideas = []*Idea{}
+  server.CurrentIdea = -1
 }
 
 // Accepts new connections and initiates web socket receiver loop
@@ -92,11 +101,15 @@ func (server *Server) handleConnections(w http.ResponseWriter, r *http.Request){
 }
 
 // Parses received server messages to determine possible commands
-func (server *Server) readCommand(msg Message){
+func (server *Server) parseMessage(msg Message) bool{
   fields := strings.Fields(msg.Text)
+  if(len(fields) == 0){
+    return false
+  }
   if(len(fields) > 1){
     server.handleCommand(Command{fields[0], strings.Join(fields[1:], " ")}, msg.Username)
   }
+  return true
 }
 
 // Detects commands in messages, executing them if present
@@ -162,19 +175,28 @@ func (server *Server) handleCommand(command Command, username string) {
 
 func (server *Server) handleMessages() {
   // Receives channel messages from connection goroutines, processing them
-  for {
-    msg := <- server.msgListener
-    server.Messages = append(server.Messages, &msg)
-    server.readCommand(msg)
-    // After processing a new message, send it to all clients to update their state
-    for cws := range server.clients {
-      err := cws.WriteJSON(msg)
-      if err != nil {
-        cws.Close()
-        server.clientsLock.Lock()
-        delete(server.clients, cws)
-        server.clientsLock.Unlock()
-      }
+  for{
+    select {
+      case msg := <-server.msgListener:
+        msgIsValid := server.parseMessage(msg)
+        if(!msgIsValid){
+          break
+        }
+
+        server.Messages = append(server.Messages, &msg)
+
+        // After processing a new message, send it to all clients to update their state
+        for cws := range server.clients {
+          err := cws.WriteJSON(msg)
+          if err != nil {
+            cws.Close()
+            server.clientsLock.Lock()
+            delete(server.clients, cws)
+            server.clientsLock.Unlock()
+          }
+        }
+      case <-server.Shutdown:
+        return
     }
   }
 }
